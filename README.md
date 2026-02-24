@@ -10,10 +10,3 @@ Webový nástroj pro komplexní inženýrský návrh geometrie zubových čerpad
 
 ## Online verze
 Aplikace je dostupná na adrese: (https://navrh-cerpadla.streamlit.app/)
-
-## Lokální spuštění
-Pro spuštění na vlastním počítači:
-
-1. Nainstalujte knihovnu Streamlit:
-   ```bash
-   pip install streamlit
