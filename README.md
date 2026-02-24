@@ -9,7 +9,7 @@ Webový nástroj pro komplexní inženýrský návrh geometrie zubových čerpad
 * **Volba motoru**: Přímé doporučení konkrétních elektromotorů VYBO Electric z aktuálního ceníku (4, 6 a 8-pólové verze) včetně odkazů na e-shop.
 
 ## Online verze
-Aplikace je dostupná na adrese: [DOPLNIT ODKAZ ZE STREAMLITU]
+Aplikace je dostupná na adrese: [(https://navrh-cerpadla.streamlit.app/)]
 
 ## Lokální spuštění
 Pro spuštění na vlastním počítači:
