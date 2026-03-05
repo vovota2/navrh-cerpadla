@@ -39,7 +39,7 @@ def get_eta_overall(p_mpa, v_ms):
     return eta
 
 def get_real_motor_name(n_sync, p_kw):
-    """Výběr komerčně dostupného motoru. Pokud není v DB, vrátí None."""
+    """Výběr komerčně dostupného motoru"""
     if n_sync == 1500:
         if p_kw == 0.25: return "VYBO 1AL71S-4 – *1786 Kč bez DPH*"
         elif p_kw == 0.37: return "VYBO 1AL71M-4 – *1961 Kč bez DPH*"
@@ -92,7 +92,7 @@ def get_real_motor_name(n_sync, p_kw):
         else: return None
     return None
 
-# POUZE ŘADA I z tabulky
+#moduly
 STD_MODULES = [0.5, 0.6, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20]
 STD_MOTORS_KW = [0.12, 0.18, 0.25, 0.37, 0.55, 0.75, 1.1, 1.5, 2.2, 3.0, 4.0, 5.5, 7.5, 11.0, 15.0, 18.5, 22.0, 30.0, 37.0, 45.0, 55.0]
 
@@ -100,7 +100,6 @@ STD_MOTORS_KW = [0.12, 0.18, 0.25, 0.37, 0.55, 0.75, 1.1, 1.5, 2.2, 3.0, 4.0, 5.
 st.set_page_config(page_title="Návrh zubového čerpadla", layout="wide")
 st.title("⚙️ Automatizovaný návrh zubového čerpadla")
 
-# --- INICIALIZACE A FUNKCE PRO SESSION STATE ---
 if 'q_unit' not in st.session_state: st.session_state.q_unit = 'l/min'
 if 'q_num' not in st.session_state: st.session_state.q_num = 120.0
 if 'q_slider' not in st.session_state: st.session_state.q_slider = 120.0
@@ -138,7 +137,7 @@ def reset_to_defaults():
 with st.sidebar:
     st.header("Vstupní parametry")
     
-    # --- PRŮTOK (PŘEPÍNAČ JEDNOTEK) ---
+    # --- PRŮTOK (prepinaní jednotek) ---
     unit = st.session_state.q_unit
     st.markdown(f"**Průtok Q [{unit}]**")
     st.radio("Jednotka průtoku", ['l/min', 'l/s'], key='unit_selector', on_change=on_unit_change, horizontal=True, label_visibility="collapsed")
@@ -180,17 +179,17 @@ with st.sidebar:
     st.markdown("---")
     st.button("🔄 Restartovat na výchozí", on_click=reset_to_defaults, use_container_width=True)
 
-# --- ALGORITMUS (BACKEND) ---
+# --- ALGORITMUS ---
 Q_input = st.session_state.q_num
 p_mpa = st.session_state.p_num
 q_tol = st.session_state.q_tol_input
 
 Q_m3s = (Q_input / 60000.0) if st.session_state.q_unit == 'l/min' else (Q_input / 1000.0)
 
-# 2. Určení objemové účinnosti
+#Určení objemové účinnosti
 eta_q = get_eta_q(p_mpa)
 
-# 3, 6, 7. Volba otáček
+# Volba otáček
 n_sync_list = [1500, 1000, 750, 600, 500, 3000] 
 n_rpm = 0
 v_m_s = 0
@@ -215,10 +214,10 @@ if n_rpm == 0:
 
 n_rps = n_rpm / 60.0
 
-# 8. Předběžný modul
+# Předběžný modul
 m_prime_mm = (D_prime_m / z_init) * 1000.0
 
-# 9. Zaokrouhlení modulu DOLŮ podle řady I
+# Zaokrouhlení modulu dolů podle řady I
 valid_modules = [m for m in STD_MODULES if m <= m_prime_mm]
 m_mm = valid_modules[-1] if valid_modules else STD_MODULES[0]
 
@@ -227,11 +226,11 @@ D_mm = z * m_mm
 D_m = D_mm / 1000.0
 v = math.pi * D_m * n_rps
 
-# 11. Šířka ozubení
+# Šířka ozubení
 b_m = Q_m3s / (2 * math.pi * (m_mm/1000.0) * D_m * n_rps * eta_q)
 b_mm = b_m * 1000.0
 
-# 12-14. Iterační smyčka pro kontrolu lambda
+# kontrolaa lambda
 lam = b_mm / D_mm
 while lam > 0.8:
     idx = STD_MODULES.index(m_mm)
@@ -250,7 +249,7 @@ while lam > 0.8:
     b_mm = b_m * 1000.0
     lam = b_mm / D_mm
 
-# --- INTELIGENTNÍ VOLBA ŠÍŘKY (KROK 16) ---
+# --- VOLBA ŠÍŘKY ---
 b_floor = math.floor(b_mm)
 b_ceil = math.ceil(b_mm)
 
@@ -272,21 +271,21 @@ else:
 Q_skut_lmin = Q_skut_m3s * 60000.0
 Q_skut_ls = Q_skut_m3s * 1000.0
 
-# 15. Hlavová kružnice
+# Hlavová kružnice
 Da_mm = D_mm + 2 * m_mm
 
-# 17. Účinnost a příkon
+# Účinnost a příkon
 eta_overall = get_eta_overall(p_mpa, v)
 P_th_W = Q_skut_m3s * (p_mpa * 1e6)
 P_W = P_th_W / eta_overall
 P_kW = P_W / 1000.0
 
-# 18. Návrh motoru (cca 1.4 násobek)
+# Návrh el. motoru
 P_rec_kW = P_kW * 1.4
 motor_kw = next((kw for kw in STD_MOTORS_KW if kw >= P_rec_kW), STD_MOTORS_KW[-1])
 recommended_motor = get_real_motor_name(selected_n_sync, motor_kw)
 
-# --- PŘÍPRAVA ZOBRAZENÍ PODLE ZVOLENÉ JEDNOTKY ---
+# --- ZOBRAZENÍ PODLE ZVOLENÉ JEDNOTKY ---
 if st.session_state.q_unit == 'l/min':
     q_primary_val = f"{Q_skut_lmin:.1f}"
     q_primary_unit = "l/min"
@@ -294,7 +293,7 @@ else:
     q_primary_val = f"{Q_skut_ls:.3f}"
     q_primary_unit = "l/s"
 
-# --- VYKRESLENÍ VÝSLEDKŮ ---
+# --- výsledky ---
 st.header("Výsledky automatizovaného návrhu")
 
 v_status = "✅" if v <= 4.0 else "❌"
@@ -335,7 +334,7 @@ with col2:
     st.subheader("Kontroly a volba elektromotoru")
     st.markdown(table_right, unsafe_allow_html=True)
     
-    # Vypsání doporučeného motoru jen pokud je v databázi (not None)
+    # Vypsání doporučeného motoru 
     if recommended_motor:
         if selected_n_sync == 1500:
             st.info(f"💡 **Doporučený komerční motor:**\n\n{recommended_motor} | [Vyhledat na e-shopu](https://www.elektro-motor.cz/kategoria-produktu/elektromotory-1400ot/)")
@@ -344,7 +343,7 @@ with col2:
         elif selected_n_sync == 750:
             st.info(f"💡 **Doporučený komerční motor:**\n\n{recommended_motor} | [Vyhledat na e-shopu](https://www.elektro-motor.cz/kategoria-produktu/elektromotory-700ot/)")
 
-# --- VLASTNÍ VIZUALIZACE PROGRESS BARU ---
+# --- VIZUALIZACE PROGRESS BARU ---
 st.markdown("<br>", unsafe_allow_html=True)
 
 bar_color = "#28a745" if abs(dev_pct) <= q_tol else "#dc3545" 
@@ -357,4 +356,5 @@ st.markdown(f"""
     Využití tolerance: {abs(dev_pct):.1f} % (Limit: {q_tol:g} %)
   </div>
 </div>
+
 """, unsafe_allow_html=True)
