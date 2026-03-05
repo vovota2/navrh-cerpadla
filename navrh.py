@@ -353,8 +353,9 @@ st.markdown(f"""
 <div style="width: 100%; background-color: #31333F; border-radius: 5px; margin-top: 10px; position: relative; height: 26px;">
   <div style="width: {fill_pct}%; height: 100%; background-color: {bar_color}; border-radius: 5px; transition: width 0.3s ease;"></div>
   <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; color: white; font-size: 15px; font-weight: bold; line-height: 26px; pointer-events: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-    Využití tolerance: {abs(dev_pct):.1f} % (Limit: {q_tol:g} %)
+    Využití tolerance průtoku: {abs(dev_pct):.1f} % (Limit: {q_tol:g} %)
   </div>
 </div>
 
 """, unsafe_allow_html=True)
+
